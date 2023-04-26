@@ -1,6 +1,6 @@
-from typing import Self, Union
+from typing import Union
 
-from patterns.Singleton.implementation.main.typings import IData
+from patterns.Singleton.implementations.main.typings import IData
 
 
 class DataBase:
