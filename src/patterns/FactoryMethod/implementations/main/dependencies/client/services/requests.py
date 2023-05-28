@@ -1,6 +1,6 @@
 import json
-from patterns.FactoryMethod.implementation.main.dependencies.client.contract.main import IRestClient
-from patterns.FactoryMethod.implementation.main.dependencies.client.contract.typings import APIResponse
+from patterns.FactoryMethod.implementations.main.dependencies.client.contract.main import IRestClient
+from patterns.FactoryMethod.implementations.main.dependencies.client.contract.typings import APIResponse
 import requests
 
 

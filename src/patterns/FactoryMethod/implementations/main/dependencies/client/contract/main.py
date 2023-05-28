@@ -1,4 +1,4 @@
-from patterns.FactoryMethod.implementation.main.dependencies.client.contract.typings import APIResponse
+from patterns.FactoryMethod.implementations.main.dependencies.client.contract.typings import APIResponse
 from abc import ABC as AbstractClass, abstractmethod
 
 

@@ -1,8 +1,8 @@
-from patterns.FactoryMethod.implementation.main.dependencies.client.contract.main import IRestClient
+from patterns.FactoryMethod.implementations.main.dependencies.client.contract.main import IRestClient
 from abc import ABC as AbstractClass, abstractmethod
-from patterns.FactoryMethod.implementation.main.dependencies.client.services.httpx import HttpxRestClient
+from patterns.FactoryMethod.implementations.main.dependencies.client.services.httpx import HttpxRestClient
 
-from patterns.FactoryMethod.implementation.main.dependencies.client.services.requests import RequestsRestClient
+from patterns.FactoryMethod.implementations.main.dependencies.client.services.requests import RequestsRestClient
 
 
 class GetTodoList(AbstractClass):
