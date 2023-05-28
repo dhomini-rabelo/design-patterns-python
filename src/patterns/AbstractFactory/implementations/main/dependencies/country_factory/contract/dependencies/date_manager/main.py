@@ -8,5 +8,5 @@ class IDateManager(AbstractFactory):
         pass
 
     @abstractmethod
-    def get_datetime(self) -> datetime:
+    def get_datetime(self, utc_datetime_obj: datetime) -> datetime:
         pass
