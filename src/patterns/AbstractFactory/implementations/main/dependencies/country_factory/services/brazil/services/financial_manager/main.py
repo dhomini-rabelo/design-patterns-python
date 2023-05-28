@@ -8,5 +8,5 @@ class BrazilFinancialManager(IFinancialManager):
     def get_representation(self, value: Decimal) -> str:
         return f'{value:,.2f}'.replace('.', '-').replace(',', '.').replace('-', ',')
 
-    def get_today_dollar_rate(self) -> Decimal:
-        return Decimal('0.20')
+    def convert_from_dollar(self, value: Decimal) -> Decimal:
+        return value * Decimal('5.00')

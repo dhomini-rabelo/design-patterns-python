@@ -8,5 +8,5 @@ class IFinancialManager(AbstractFactory):
         pass
 
     @abstractmethod
-    def get_today_dollar_rate(self) -> Decimal:
+    def convert_from_dollar(self, value: Decimal) -> Decimal:
         pass
