@@ -6,7 +6,7 @@ from patterns.AbstractFactory.implementations.main.dependencies.country_factory.
 
 class BrazilFinancialManager(IFinancialManager):
     def get_representation(self, value: Decimal) -> str:
-        return f'{value:,.2f}'.replace('.', '-').replace(',', '.').replace('-', ',')
+        return f'R$ {value:,.2f}'.replace('.', '-').replace(',', '.').replace('-', ',')
 
     def convert_from_dollar(self, value: Decimal) -> Decimal:
         return value * Decimal('5.00')
