@@ -1,8 +1,8 @@
-from abc import ABC as AbstractFactory, abstractmethod
+from abc import ABC as AbstractClass, abstractmethod
 from datetime import datetime
 
 
-class IDateManager(AbstractFactory):
+class IDateManager(AbstractClass):
     @abstractmethod
     def get_representation(self, datetime_obj: datetime) -> str:
         pass

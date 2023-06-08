@@ -1,8 +1,8 @@
-from abc import ABC as AbstractFactory, abstractmethod
+from abc import ABC as AbstractClass, abstractmethod
 from decimal import Decimal
 
 
-class IFinancialManager(AbstractFactory):
+class IFinancialManager(AbstractClass):
     @abstractmethod
     def get_representation(self, value: Decimal) -> str:
         pass
