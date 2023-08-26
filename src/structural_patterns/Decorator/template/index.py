@@ -23,16 +23,19 @@ class Product(IProduct):  # Concrete Component
         return self.__name
 
 
-class ProductWithTaxDecorator(IProduct):  # Decorator
+class IProductGetPriceDecorator(AbstractClass):  # Decorator
+    @abstractmethod
+    def get_price(self) -> int:
+        pass
+
+
+class ProductWithTaxDecorator(IProductGetPriceDecorator):  # Concrete Decorator
     def __init__(self, product: Product, tax_in_cents: int):
         self.__product = product
         self.__tax = tax_in_cents
 
     def get_price(self) -> int:
         return self.__product.get_price() + self.__tax
-
-    def get_name(self) -> str:
-        return self.__product.get_name()
 
 
 computer_without_tax = Product('Computer', 10000)
