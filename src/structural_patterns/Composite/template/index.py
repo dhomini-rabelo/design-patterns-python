@@ -35,17 +35,6 @@ class Field:
             raise ValueError(f'The {self.name} field must not have a default value because it is a required field')
 
 
-@dataclass
-class CharField(Field):
-    validators: list[Callable[[str], str]] = field(default_factory=lambda: [CharField.validate_field_type])
-
-    @staticmethod
-    def validate_field_type(value: str):
-        if not isinstance(value, str):
-            raise ValidationError(f'Este campo não representa um texto válido')
-        return value
-
-
 class ISerializer(AbstractClass):
     @abstractmethod
     def validate(self, data: dict) -> Validation:
@@ -69,8 +58,7 @@ class Serializer(ISerializer):
 
     def __get_fields(self) -> list[Field]:
         def get_field(name: str, field_type: type) -> Field:
-            FieldClass = CharField if field_type == str else Field
-            return FieldClass(
+            return Field(
                 name=name,
                 field_type=field_type,
                 default_value=getattr(self, name) if hasattr(self, name) else None,
