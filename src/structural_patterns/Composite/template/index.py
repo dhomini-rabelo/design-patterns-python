@@ -86,6 +86,9 @@ class Serializer(ISerializer):
     def __get_errors(self, data: dict):
         errors = {}
 
+        if not isinstance(data, dict):
+            return {'body': 'Payload inválido'}
+
         for field in self.__fields:
             try:
                 if field.name not in data:
@@ -126,6 +129,3 @@ print(
         }
     )
 )
-
-
-# TODO [] Validar se não tem algum campo extra
