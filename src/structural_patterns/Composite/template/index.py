@@ -35,18 +35,8 @@ class Field:
             raise ValueError(f'The {self.name} field must not have a default value because it is a required field')
 
 
-class ISerializer(AbstractClass):
-    @abstractmethod
-    def validate(self, data: dict) -> Validation:
-        pass
-
-    @abstractmethod
-    def to_json(self, data: dict) -> str:
-        pass
-
-    @abstractmethod
-    def to_serialized_data(self, data: dict) -> dict:
-        pass
+class SerializerSettings:
+    validators: dict[str, list[Callable[[Any], Any]]] = {}
 
 
 class SerializerMetaClass(type):
@@ -63,14 +53,13 @@ class SerializerMetaClass(type):
                 field_type=field_type,
                 default_value=getattr(self, name) if hasattr(self, name) else None,
                 is_required=not ('typing.Optional' in str(field_type)),
+                validators=((getattr(self.Meta, 'validators').get(name) or [])) if hasattr(self, 'Meta') else [],
             )
 
         payload_fields = [get_field(name, field_type) for name, field_type in fields]
 
         if payload_fields == []:
             raise ValueError('Serializer without fields')
-
-        print(payload_fields)
 
         return payload_fields
 
@@ -120,11 +109,22 @@ class Serializer(metaclass=SerializerMetaClass):
         return data
 
 
+def validate_string_length(max_length: int):
+    def validate(value: str):
+        if len(value) > max_length:
+            raise ValidationError(f'Este campo deveria ter {max_length} caracteres')
+
+    return validate
+
+
 class PersonSerializer(Serializer):
     name: str
     age: Optional[int]
 
+    class Meta(SerializerSettings):
+        validators = {'name': [validate_string_length(5)]}
+
 
 s = PersonSerializer()
 
-print(s.validate({}))
+print(s.validate({'name': 'zaerrr'}))
