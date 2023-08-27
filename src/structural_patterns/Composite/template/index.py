@@ -49,14 +49,14 @@ class ISerializer(AbstractClass):
         pass
 
 
-class Serializer(ISerializer):
-    name: str
-    age: Optional[int] = 1
+class SerializerMetaClass(type):
+    def __new__(mcs, name, bases, namespace):
+        cls = super().__new__(mcs, name, bases, namespace)
+        if name != 'Serializer':
+            cls._fields = mcs.__get_fields(cls, cls.__annotations__.items())
+        return cls
 
-    def __init__(self) -> None:
-        self.__fields = self.__get_fields()
-
-    def __get_fields(self) -> list[Field]:
+    def __get_fields(self, fields: dict) -> list[Field]:
         def get_field(name: str, field_type: type) -> Field:
             return Field(
                 name=name,
@@ -65,7 +65,18 @@ class Serializer(ISerializer):
                 is_required=not ('typing.Optional' in str(field_type)),
             )
 
-        return [get_field(name, field_type) for name, field_type in self.__annotations__.items()]
+        payload_fields = [get_field(name, field_type) for name, field_type in fields]
+
+        if payload_fields == []:
+            raise ValueError('Serializer without fields')
+
+        print(payload_fields)
+
+        return payload_fields
+
+
+class Serializer(metaclass=SerializerMetaClass):
+    _fields: list[Field]
 
     def __validate_required_field(self, field: Field, value: Any):
         if (value is None) and field.is_required:
@@ -77,7 +88,7 @@ class Serializer(ISerializer):
         if not isinstance(data, dict):
             return {'body': 'Payload inválido'}
 
-        for field in self.__fields:
+        for field in self._fields:
             try:
                 if field.name not in data:
                     self.__validate_required_field(field, data.get(field.name))
@@ -109,11 +120,11 @@ class Serializer(ISerializer):
         return data
 
 
-s = Serializer()
-print(
-    s.validate(
-        {
-            'age': '25',
-        }
-    )
-)
+class PersonSerializer(Serializer):
+    name: str
+    age: Optional[int]
+
+
+s = PersonSerializer()
+
+print(s.validate({}))
