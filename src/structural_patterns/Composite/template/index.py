@@ -10,6 +10,12 @@ class ValidationError(Exception):
     pass
 
 
+class IValidator(AbstractClass):
+    @abstractmethod
+    def get_validators(self) -> list[Callable[[str], None]]:
+        pass
+
+
 @dataclass
 class Validation:
     is_valid: bool
@@ -25,7 +31,7 @@ class Field:
     field_type: type
     default_value: Optional[str]
     is_required: bool
-    validators: list[Callable[[str], str]] = field(default_factory=list)
+    validator: Optional[IValidator]
 
     def __post_init__(self):
         self.__validate()
@@ -36,7 +42,7 @@ class Field:
 
 
 class SerializerSettings:
-    validators: dict[str, list[Callable[[Any], Any]]] = {}
+    validators: dict[str, IValidator] = {}
 
 
 class SerializerMetaClass(type):
@@ -46,14 +52,16 @@ class SerializerMetaClass(type):
             cls._fields = mcs.__get_fields(cls, cls.__annotations__.items())
         return cls
 
-    def __get_fields(self, fields: dict) -> list[Field]:
+    def __get_fields(cls, fields: dict) -> list[Field]:
         def get_field(name: str, field_type: type) -> Field:
             return Field(
                 name=name,
                 field_type=field_type,
-                default_value=getattr(self, name) if hasattr(self, name) else None,
+                default_value=getattr(cls, name) if hasattr(cls, name) else None,
                 is_required=not ('typing.Optional' in str(field_type)),
-                validators=((getattr(self.Meta, 'validators').get(name) or [])) if hasattr(self, 'Meta') else [],
+                validator=(getattr(cls.Meta, 'validator').get(name) if hasattr(cls.Meta, 'validator') else None)
+                if hasattr(cls, 'Meta')
+                else None,
             )
 
         payload_fields = [get_field(name, field_type) for name, field_type in fields]
@@ -81,8 +89,8 @@ class Serializer(metaclass=SerializerMetaClass):
             try:
                 if field.name not in data:
                     self.__validate_required_field(field, data.get(field.name))
-                else:
-                    for validator in field.validators:
+                elif field.validator:
+                    for validator in field.validator.get_validators():
                         validator(data[field.name])
             except ValidationError as error:
                 errors[field.name] = str(error)
@@ -109,12 +117,22 @@ class Serializer(metaclass=SerializerMetaClass):
         return data
 
 
-def validate_string_length(max_length: int):
-    def validate(value: str):
-        if len(value) > max_length:
-            raise ValidationError(f'Este campo deveria ter {max_length} caracteres')
+class CharFieldValidator(IValidator):
+    def __init__(self, max_length: Optional[int] = None):
+        self.__validators = []
 
-    return validate
+        if max_length:
+            self.__validators.append(self.__get_validate_string_length_function(max_length))
+
+    def __get_validate_string_length_function(self, max_length: int):
+        def validate(value: str):
+            if len(value) > max_length:
+                raise ValidationError(f'Este campo deveria ter {max_length} caracteres')
+
+        return validate
+
+    def get_validators(self) -> list[Callable[[str], Any]]:
+        return self.__validators
 
 
 class PersonSerializer(Serializer):
@@ -122,7 +140,7 @@ class PersonSerializer(Serializer):
     age: Optional[int]
 
     class Meta(SerializerSettings):
-        validators = {'name': [validate_string_length(5)]}
+        validator = {'name': CharFieldValidator(max_length=2)}
 
 
 s = PersonSerializer()
