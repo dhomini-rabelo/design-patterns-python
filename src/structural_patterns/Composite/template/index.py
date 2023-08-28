@@ -120,7 +120,7 @@ class Serializer(metaclass=SerializerMetaClass):
                     ]:
                         validator(data[field.name])
             except ValidationError as error:
-                errors[field.name] = str(error)
+                errors[field.name] = error.args[0]
 
         return errors
 
@@ -191,6 +191,7 @@ class PersonSerializer(Serializer):
 
 class SchoolSerializer(Serializer):
     student: PersonSerializer
+    name: str
 
     class Meta(SerializerSettings):
         pass
@@ -203,7 +204,7 @@ print(
     s.validate(
         {
             'student': {
-                'name': 'zaerrr',
+                # 'name': 'zaerrr',
                 'age': '34',
             }
         }
