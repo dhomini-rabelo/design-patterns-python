@@ -96,6 +96,11 @@ class Serializer(metaclass=SerializerMetaClass):
 
     def __get_errors(self, data: dict):
         errors = {}
+        name_of_the_fields = [field.name for field in self._fields]
+
+        for field_name in data.keys():
+            if field_name not in name_of_the_fields:
+                return {'body': f'{field_name} é um campo inexistente'}
 
         if not isinstance(data, dict):
             return {'body': 'Payload inválido'}
@@ -181,4 +186,11 @@ class PersonSerializer(Serializer):
 
 s = PersonSerializer()
 
-print(s.validate({'name': 'zaerrr', 'age': '38'}))
+print(
+    s.validate(
+        {
+            'name': 'zaerrr',
+            'age': '38',
+        }
+    )
+)
