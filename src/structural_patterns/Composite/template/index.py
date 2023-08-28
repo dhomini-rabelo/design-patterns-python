@@ -109,6 +109,10 @@ class Serializer(metaclass=SerializerMetaClass):
             try:
                 if field.name not in data:
                     self.__validate_required_field(field, data.get(field.name))
+                elif isinstance(field.field_type, type) and issubclass(field.field_type, Serializer):
+                    validation = field.field_type().validate(data[field.name])
+                    if not validation.is_valid:
+                        raise ValidationError(validation.errors)
                 else:
                     for validator in [
                         *self.__get_default_validators(field),
@@ -141,7 +145,7 @@ class Serializer(metaclass=SerializerMetaClass):
         )
 
     def __get_complete_data(self, data: dict) -> dict:
-        return {field.name: (data.get(field.name) or str(field.default_value)) for field in self._fields}
+        return {field.name: (data.get(field.name) or field.default_value) for field in self._fields}
 
     def to_json(self, complete_data: dict[str, str]) -> str:
         return json.dumps(complete_data)
@@ -178,19 +182,29 @@ class CharFieldValidator(IValidator):
 
 class PersonSerializer(Serializer):
     name: str
-    age: Optional[int] = 20
+    age: Optional[int]
 
     class Meta(SerializerSettings):
         validator = {'name': CharFieldValidator(max_length=10)}
 
 
-s = PersonSerializer()
+class SchoolSerializer(Serializer):
+    student: PersonSerializer
+
+    class Meta(SerializerSettings):
+        pass
+        # validator = {'name': CharFieldValidator(max_length=10)}
+
+
+s = SchoolSerializer()
 
 print(
     s.validate(
         {
-            'name': 'zaerrr',
-            'age': '38',
+            'student': {
+                'name': 'zaerrr',
+                'age': '34',
+            }
         }
     )
 )
