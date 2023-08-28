@@ -151,15 +151,16 @@ class Serializer(metaclass=SerializerMetaClass):
         return json.dumps(complete_data)
 
     def to_serialized_data(self, complete_data: dict) -> dict:
-        def get_serialize_field(field: Field, field_value: str):
-            if 'int' in str(field.field_type):
+        def get_serialize_field(field: Field, field_value: Any):
+            if field_value is None:
+                return field.default_value
+            elif 'int' in str(field.field_type):
                 return int(field_value)
+            elif isinstance(field.field_type, type) and issubclass(field.field_type, Serializer):
+                return field.field_type().to_serialized_data(field_value)
             return field_value
 
-        return {
-            field.name: (complete_data.get(field.name) or get_serialize_field(field, complete_data[field.name]))
-            for field in self._fields
-        }
+        return {field.name: (get_serialize_field(field, complete_data.get(field.name))) for field in self._fields}
 
 
 class CharFieldValidator(IValidator):
