@@ -136,13 +136,21 @@ class Serializer(metaclass=SerializerMetaClass):
         )
 
     def __get_complete_data(self, data: dict) -> dict:
-        return {field.name: (data.get(field.name) or field.default_value) for field in self._fields}
+        return {field.name: (data.get(field.name) or str(field.default_value)) for field in self._fields}
 
-    def to_json(self, data: dict[str, str]) -> str:
-        return json.dumps(data)
+    def to_json(self, complete_data: dict[str, str]) -> str:
+        return json.dumps(complete_data)
 
-    def to_serialized_data(self, data: dict) -> dict:
-        return data
+    def to_serialized_data(self, complete_data: dict) -> dict:
+        def get_serialize_field(field: Field, field_value: str):
+            if 'int' in str(field.field_type):
+                return int(field_value)
+            return field_value
+
+        return {
+            field.name: (complete_data.get(field.name) or get_serialize_field(field, complete_data[field.name]))
+            for field in self._fields
+        }
 
 
 class CharFieldValidator(IValidator):
@@ -173,4 +181,4 @@ class PersonSerializer(Serializer):
 
 s = PersonSerializer()
 
-print(s.validate({'name': 'zaerrr'}))
+print(s.validate({'name': 'zaerrr', 'age': '38'}))
