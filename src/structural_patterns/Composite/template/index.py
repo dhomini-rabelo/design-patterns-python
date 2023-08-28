@@ -16,6 +16,21 @@ class IValidator(AbstractClass):
         pass
 
 
+class DefaultIntegerFieldValidator(IValidator):
+    def __init__(self):
+        self.__validators = [self.__get_validate_is_numeric(int)]
+
+    def __get_validate_is_numeric(self, is_required: bool):
+        def validate(value: str):
+            if not value.isnumeric():
+                raise ValidationError(f'Valor inválido')
+
+        return validate
+
+    def get_validators(self) -> list[Callable[[str], Any]]:
+        return self.__validators
+
+
 @dataclass
 class Validation:
     is_valid: bool
@@ -89,13 +104,21 @@ class Serializer(metaclass=SerializerMetaClass):
             try:
                 if field.name not in data:
                     self.__validate_required_field(field, data.get(field.name))
-                elif field.validator:
-                    for validator in field.validator.get_validators():
+                else:
+                    for validator in [
+                        *self.__get_default_validators(field),
+                        *(field.validator.get_validators() if field.validator else []),
+                    ]:
                         validator(data[field.name])
             except ValidationError as error:
                 errors[field.name] = str(error)
 
         return errors
+
+    def __get_default_validators(self, field: Field):
+        if 'int' in str(field.field_type):
+            return DefaultIntegerFieldValidator().get_validators()
+        return []
 
     def validate(self, data: dict) -> Validation:
         errors = self.__get_errors(data)
@@ -140,7 +163,7 @@ class PersonSerializer(Serializer):
     age: Optional[int]
 
     class Meta(SerializerSettings):
-        validator = {'name': CharFieldValidator(max_length=2)}
+        validator = {'name': CharFieldValidator(max_length=10)}
 
 
 s = PersonSerializer()
