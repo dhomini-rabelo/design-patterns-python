@@ -126,12 +126,17 @@ class Serializer(metaclass=SerializerMetaClass):
         if errors:
             return Validation(is_valid=False, raw_data=data, serialized_data=None, json_data=None, errors=errors)
 
+        complete_data = self.__get_complete_data(data)
+
         return Validation(
             is_valid=True,
-            raw_data=data,
-            serialized_data=self.to_serialized_data(data),
-            json_data=self.to_json(data),
+            raw_data=complete_data,
+            serialized_data=self.to_serialized_data(complete_data),
+            json_data=self.to_json(complete_data),
         )
+
+    def __get_complete_data(self, data: dict) -> dict:
+        return {field.name: (data.get(field.name) or field.default_value) for field in self._fields}
 
     def to_json(self, data: dict[str, str]) -> str:
         return json.dumps(data)
@@ -160,7 +165,7 @@ class CharFieldValidator(IValidator):
 
 class PersonSerializer(Serializer):
     name: str
-    age: Optional[int]
+    age: Optional[int] = 20
 
     class Meta(SerializerSettings):
         validator = {'name': CharFieldValidator(max_length=10)}
