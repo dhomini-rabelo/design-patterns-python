@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 import inspect
 import json
-from typing import Any, Callable, Optional, Required, Self
+from typing import Annotated, Any, Callable, Optional, Required, Self
 
 
 class ValidationError(Exception):
@@ -191,6 +191,7 @@ class PersonSerializer(Serializer):
 
 class SchoolSerializer(Serializer):
     student: PersonSerializer
+    director: PersonSerializer
     name: str
 
     class Meta(SerializerSettings):
@@ -204,9 +205,11 @@ print(
     s.validate(
         {
             'student': {
-                # 'name': 'zaerrr',
-                'age': '34',
-            }
+                'name': 'John Doe',
+                'age': '14',
+            },
+            'director': {'name': 'Mary'},
+            'name': 'MIT',
         }
     )
 )
