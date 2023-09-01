@@ -56,7 +56,7 @@ class Serializer(metaclass=SerializerMetaClass):  # Component
                 elif isinstance(field.field_type, type) and issubclass(field.field_type, Serializer):
                     validation = field.field_type().validate(data[field.name])
                     if not validation.is_valid:
-                        raise ValidationError(validation.errors)
+                        raise ValidationError(validation.errors)  # Call Leaf
                 else:
                     for validator in [
                         *self.__get_default_validators(field),
@@ -101,7 +101,7 @@ class Serializer(metaclass=SerializerMetaClass):  # Component
             elif 'int' in str(field.field_type):
                 return int(field_value)
             elif isinstance(field.field_type, type) and issubclass(field.field_type, Serializer):
-                return field.field_type().to_serialized_data(field_value)
+                return field.field_type().to_serialized_data(field_value)  # Call Leaf
             return field_value
 
         return {field.name: (get_serialize_field(field, complete_data.get(field.name))) for field in self._fields}
