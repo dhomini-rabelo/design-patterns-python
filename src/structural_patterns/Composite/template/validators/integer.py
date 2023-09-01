@@ -1,5 +1,5 @@
 from structural_patterns.Composite.template.component.typings import ValidationError
-from structural_patterns.Composite.template.validators.typings import IValidator
+from structural_patterns.Composite.template.validators.typings import IValidator, IValidatorResponse
 from typing import Any, Callable
 
 
@@ -14,5 +14,5 @@ class DefaultIntegerFieldValidator(IValidator):
 
         return validate
 
-    def get_validators(self) -> list[Callable[[str], Any]]:
+    def get_validators(self) -> IValidatorResponse:
         return self.__validators

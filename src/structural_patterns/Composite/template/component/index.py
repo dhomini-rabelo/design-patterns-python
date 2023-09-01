@@ -3,6 +3,8 @@ from structural_patterns.Composite.template.validators.integer import DefaultInt
 import json
 from typing import Any
 
+from structural_patterns.Composite.template.validators.typings import IValidatorResponse
+
 
 class SerializerMetaClass(type):
     def __new__(mcs, name, bases, namespace):
@@ -68,7 +70,7 @@ class Serializer(metaclass=SerializerMetaClass):  # Component
 
         return errors
 
-    def __get_default_validators(self, field: Field):
+    def __get_default_validators(self, field: Field) -> IValidatorResponse:
         if 'int' in str(field.field_type):
             return DefaultIntegerFieldValidator().get_validators()
         return []
