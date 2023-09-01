@@ -1,9 +1,7 @@
 from abc import ABC as AbstractClass, abstractmethod
-from dataclasses import dataclass, field
-from decimal import Decimal
-import inspect
+from dataclasses import dataclass
 import json
-from typing import Annotated, Any, Callable, Optional, Required, Self
+from typing import Any, Callable, Optional
 
 
 class ValidationError(Exception):
@@ -20,7 +18,7 @@ class DefaultIntegerFieldValidator(IValidator):
     def __init__(self):
         self.__validators = [self.__get_validate_is_numeric(int)]
 
-    def __get_validate_is_numeric(self, is_required: bool):
+    def __get_validate_is_numeric(self):
         def validate(value: str):
             if not value.isnumeric():
                 raise ValidationError(f'Valor inválido')
@@ -87,7 +85,7 @@ class SerializerMetaClass(type):
         return payload_fields
 
 
-class Serializer(metaclass=SerializerMetaClass):
+class Serializer(metaclass=SerializerMetaClass):  # Component
     _fields: list[Field]
 
     def __validate_required_field(self, field: Field, value: Any):
@@ -190,13 +188,9 @@ class PersonSerializer(Serializer):
 
 
 class SchoolSerializer(Serializer):
-    student: PersonSerializer
-    director: PersonSerializer
+    student: PersonSerializer  # parent
+    director: PersonSerializer  # parent
     name: str
-
-    class Meta(SerializerSettings):
-        pass
-        # validator = {'name': CharFieldValidator(max_length=10)}
 
 
 s = SchoolSerializer()
