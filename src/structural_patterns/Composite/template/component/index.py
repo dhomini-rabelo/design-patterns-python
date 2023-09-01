@@ -1,9 +1,6 @@
 from structural_patterns.Composite.template.component.typings import Field, ValidationError, Validation
-from structural_patterns.Composite.template.validators.integer import DefaultIntegerFieldValidator
 import json
 from typing import Any
-
-from structural_patterns.Composite.template.validators.typings import IValidatorResponse
 
 
 class SerializerMetaClass(type):
@@ -61,7 +58,7 @@ class Serializer(metaclass=SerializerMetaClass):  # Component
                         raise ValidationError(validation.errors)  # Call Leaf
                 else:
                     for validator in [
-                        *self.__get_default_validators(field),
+                        *(field.default_validator.get_validators() if field.default_validator else []),
                         *(field.validator.get_validators() if field.validator else []),
                     ]:
                         validator(data[field.name])
@@ -69,11 +66,6 @@ class Serializer(metaclass=SerializerMetaClass):  # Component
                 errors[field.name] = error.args[0]
 
         return errors
-
-    def __get_default_validators(self, field: Field) -> IValidatorResponse:
-        if 'int' in str(field.field_type):
-            return DefaultIntegerFieldValidator().get_validators()
-        return []
 
     def validate(self, data: dict) -> Validation:
         errors = self.__get_errors(data)
