@@ -1,4 +1,5 @@
-from structural_patterns.Composite.template.component.typings import Field, ValidationError, Validation
+from structural_patterns.Composite.template.component.errors import ValidationError
+from structural_patterns.Composite.template.component.typings import Field, Validation
 import json
 from typing import Any
 

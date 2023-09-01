@@ -1,6 +1,6 @@
-from structural_patterns.Composite.template.component.typings import ValidationError
+from structural_patterns.Composite.template.component.errors import ValidationError
 from structural_patterns.Composite.template.validators.typings import IValidator, IValidatorResponse
-from typing import Any, Callable, Optional
+from typing import Optional
 
 
 class CharFieldValidator(IValidator):

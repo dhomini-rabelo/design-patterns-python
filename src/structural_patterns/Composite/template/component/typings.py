@@ -1,11 +1,7 @@
-from structural_patterns.Composite.template.validators.integer import DefaultIntegerFieldValidator
 from structural_patterns.Composite.template.validators.typings import IValidator
+from structural_patterns.Composite.template.validators.integer import DefaultIntegerFieldValidator
 from dataclasses import dataclass
 from typing import Optional
-
-
-class ValidationError(Exception):
-    pass
 
 
 @dataclass
@@ -23,8 +19,8 @@ class Field:
     field_type: type
     default_value: Optional[str]
     is_required: bool
-    default_validator: Optional[IValidator] = None
     validator: Optional[IValidator]
+    default_validator: Optional[IValidator] = None
 
     def __post_init__(self):
         self.__validate()
