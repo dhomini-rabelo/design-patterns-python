@@ -1,5 +1,5 @@
 from structural_patterns.Composite.template.component.index import Serializer
-from structural_patterns.Composite.template.component.typings import SerializerSettings
+from structural_patterns.Composite.template.component.typings import ISerializerSettings
 from structural_patterns.Composite.template.validators.char import CharFieldValidator
 from typing import Optional
 
@@ -8,7 +8,7 @@ class PersonSerializer(Serializer):
     name: str
     age: Optional[int]
 
-    class Meta(SerializerSettings):
+    class Meta(ISerializerSettings):
         validator = {'name': CharFieldValidator(max_length=10)}
 
 

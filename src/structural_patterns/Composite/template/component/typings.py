@@ -32,5 +32,5 @@ class Field:
             raise ValueError(f'The {self.name} field must not have a default value because it is a required field')
 
 
-class SerializerSettings:
-    validators: dict[str, IValidator] = {}
+class ISerializerSettings:
+    validators: dict[str, IValidator]
