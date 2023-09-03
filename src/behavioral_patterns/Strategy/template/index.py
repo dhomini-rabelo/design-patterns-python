@@ -6,11 +6,25 @@ from typing import Optional
 
 
 @dataclass
-class BankAccount:
+class ValidationResponse:
+    is_valid: bool
+    errors: Optional[dict]
+
+
+@dataclass
+class ProcessResponse:
     created: datetime = field(init=False, default_factory=lambda: datetime.utcnow())
+    sender: str
+    receiver: str
+    value: Decimal
+    payment_method: str
+
+
+@dataclass
+class BankAccount:
     name: str
     email: str
-    balance: Decimal = field(init=False, default=Decimal('0.00'))
+    balance: Decimal = field(init=False, default=Decimal('100.00'))
     full_credit: Decimal = field(init=False, default=Decimal('50.00'))
     invoice: Decimal = field(init=False, default=Decimal('0.00'))
     is_active: bool = field(init=False, default=True)
@@ -24,9 +38,9 @@ class IProcessPayment(AbstractClass):  # Strategy
         pass
 
     @abstractmethod
-    def validate(self, sender_account: BankAccount, payload: dict) -> bool:
+    def validate(self, sender_account: BankAccount, payload: dict) -> ValidationResponse:
         pass
 
     @abstractmethod
-    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: dict) -> dict:
+    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: dict) -> ProcessResponse:
         pass
