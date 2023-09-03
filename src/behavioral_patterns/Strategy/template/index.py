@@ -116,6 +116,39 @@ class ProcessDebitCardPayment(IProcessPayment):  # Concrete Strategy
         )
 
 
+class ProcessCreditCardPayment(IProcessPayment):  # Concrete Strategy
+    def get_receiver(self, payload: IPayload) -> BankAccount:
+        receiver_id = payload['receiver']
+        if receiver_id == '238238238932892392893':
+            return BankAccount('any', 'any@email.com')
+        else:
+            raise ValueError(f'{payload["receiver"]} id not found')
+
+    def can_transfer(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
+        password = payload.get('password')
+        if not password:
+            return ValidationResponse(is_valid=False, errors={'password': 'This field is required'})
+        elif password != '1234':
+            return ValidationResponse(is_valid=False, errors={'password': 'Invalid password'})
+        elif payload['value'] > sender_account.full_credit:
+            return ValidationResponse(is_valid=False, errors={'sender_account': 'Value greater than full credit'})
+        else:
+            return ValidationResponse(
+                is_valid=True,
+            )
+
+    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: IPayload) -> ProcessResponse:
+        sender_account.full_credit -= payload['value']
+        receiver_account.balance += payload['value']
+        return ProcessResponse(
+            sender=sender_account.name,
+            receiver=receiver_account.name,
+            payment_method='CREDIT_CARD',
+            value=payload['value'],
+            extra={},
+        )
+
+
 class ProcessPaymentService:  # Context
     def run(self, sender_account: BankAccount, process_payment: IProcessPayment, payload: IPayload) -> ProcessResponse:
         receiver_account = process_payment.get_receiver(payload)
@@ -144,3 +177,14 @@ print(
         payload={'receiver': '238238238932892392893', 'value': Decimal('50'), 'password': '1234'},
     )
 )
+
+print(
+    process_payment_service.run(
+        sender_account=bank_account,
+        process_payment=ProcessCreditCardPayment(),
+        payload={'receiver': '238238238932892392893', 'value': Decimal('50'), 'password': '1234'},
+    )
+)
+
+
+print(bank_account)
