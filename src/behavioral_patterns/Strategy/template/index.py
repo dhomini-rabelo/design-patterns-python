@@ -2,7 +2,7 @@ from abc import ABC as AbstractClass, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Literal, Optional, TypedDict
+from typing import Literal, NotRequired, Optional, TypedDict
 
 
 @dataclass
@@ -18,7 +18,7 @@ class ProcessResponse:
     receiver: str
     value: Decimal
     payment_method: Literal['PIX', 'CREDIT_CARD', 'DEBIT_CARD']
-    extra: dict
+    extra: Optional[dict] = None
 
 
 @dataclass
@@ -36,6 +36,7 @@ class BankAccount:
 class IPayload(TypedDict):
     receiver: str
     value: Decimal
+    password: NotRequired[str]
 
 
 class IProcessPayment(AbstractClass):  # Strategy
@@ -82,6 +83,39 @@ class ProcessPIXPayment(IProcessPayment):  # Concrete Strategy
         )
 
 
+class ProcessDebitCardPayment(IProcessPayment):  # Concrete Strategy
+    def get_receiver(self, payload: IPayload) -> BankAccount:
+        receiver_id = payload['receiver']
+        if receiver_id == '238238238932892392893':
+            return BankAccount('any', 'any@email.com')
+        else:
+            raise ValueError(f'{payload["receiver"]} id not found')
+
+    def can_transfer(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
+        password = payload.get('password')
+        if not password:
+            return ValidationResponse(is_valid=False, errors={'password': 'This field is required'})
+        elif password != '1234':
+            return ValidationResponse(is_valid=False, errors={'password': 'Invalid password'})
+        elif payload['value'] > sender_account.balance:
+            return ValidationResponse(is_valid=False, errors={'sender_account': 'Value greater than balance'})
+        else:
+            return ValidationResponse(
+                is_valid=True,
+            )
+
+    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: IPayload) -> ProcessResponse:
+        sender_account.balance -= payload['value']
+        receiver_account.balance += payload['value']
+        return ProcessResponse(
+            sender=sender_account.name,
+            receiver=receiver_account.name,
+            payment_method='DEBIT_CARD',
+            value=payload['value'],
+            extra={},
+        )
+
+
 class ProcessPaymentService:  # Context
     def run(self, sender_account: BankAccount, process_payment: IProcessPayment, payload: IPayload) -> ProcessResponse:
         receiver_account = process_payment.get_receiver(payload)
@@ -93,11 +127,20 @@ class ProcessPaymentService:  # Context
 
 
 process_payment_service = ProcessPaymentService()
+bank_account = BankAccount('John Doe', 'john@email.com')
 
 print(
     process_payment_service.run(
-        sender_account=BankAccount('John Doe', 'john@email.com'),
+        sender_account=bank_account,
         process_payment=ProcessPIXPayment(),
         payload={'receiver': 'any@email.com', 'value': Decimal('50')},
+    )
+)
+
+print(
+    process_payment_service.run(
+        sender_account=bank_account,
+        process_payment=ProcessDebitCardPayment(),
+        payload={'receiver': '238238238932892392893', 'value': Decimal('50'), 'password': '1234'},
     )
 )
