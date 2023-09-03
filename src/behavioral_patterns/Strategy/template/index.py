@@ -44,7 +44,7 @@ class IProcessPayment(AbstractClass):  # Strategy
         pass
 
     @abstractmethod
-    def validate(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
+    def can_transfer(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
         pass
 
     @abstractmethod
@@ -60,7 +60,7 @@ class ProcessPIXPayment(IProcessPayment):  # Concrete Strategy
         else:
             raise ValueError(f'{payload["receiver"]} key not found')
 
-    def validate(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
+    def can_transfer(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
         if sender_account.balance >= payload['value']:
             return ValidationResponse(
                 is_valid=True,
@@ -80,3 +80,13 @@ class ProcessPIXPayment(IProcessPayment):  # Concrete Strategy
                 'key': payload['receiver'],
             },
         )
+
+
+class ProcessPaymentService:  # Context
+    def run(self, sender_account: BankAccount, process_payment: IProcessPayment, payload: IPayload):
+        receiver_account = process_payment.get_receiver(payload)
+        can_transfer = process_payment.can_transfer(sender_account, payload)
+        if can_transfer.is_valid:
+            return process_payment.process(sender_account, receiver_account, payload)
+        else:
+            raise ValueError(can_transfer.errors)
