@@ -83,10 +83,21 @@ class ProcessPIXPayment(IProcessPayment):  # Concrete Strategy
 
 
 class ProcessPaymentService:  # Context
-    def run(self, sender_account: BankAccount, process_payment: IProcessPayment, payload: IPayload):
+    def run(self, sender_account: BankAccount, process_payment: IProcessPayment, payload: IPayload) -> ProcessResponse:
         receiver_account = process_payment.get_receiver(payload)
         can_transfer = process_payment.can_transfer(sender_account, payload)
         if can_transfer.is_valid:
             return process_payment.process(sender_account, receiver_account, payload)
         else:
             raise ValueError(can_transfer.errors)
+
+
+process_payment_service = ProcessPaymentService()
+
+print(
+    process_payment_service.run(
+        sender_account=BankAccount('John Doe', 'john@email.com'),
+        process_payment=ProcessPIXPayment(),
+        payload={'receiver': 'any@email.com', 'value': Decimal('50')},
+    )
+)
