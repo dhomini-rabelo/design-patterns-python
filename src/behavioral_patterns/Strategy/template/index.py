@@ -2,13 +2,13 @@ from abc import ABC as AbstractClass, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
+from typing import Literal, Optional, TypedDict
 
 
 @dataclass
 class ValidationResponse:
     is_valid: bool
-    errors: Optional[dict]
+    errors: Optional[dict] = None
 
 
 @dataclass
@@ -17,7 +17,8 @@ class ProcessResponse:
     sender: str
     receiver: str
     value: Decimal
-    payment_method: str
+    payment_method: Literal['PIX', 'CREDIT_CARD', 'DEBIT_CARD']
+    extra: dict
 
 
 @dataclass
@@ -32,15 +33,50 @@ class BankAccount:
     increase_request_in_progress: bool = field(init=False, default=False)
 
 
+class IPayload(TypedDict):
+    receiver: str
+    value: Decimal
+
+
 class IProcessPayment(AbstractClass):  # Strategy
     @abstractmethod
-    def get_receiver(self, payload: dict) -> BankAccount:
+    def get_receiver(self, payload: IPayload) -> BankAccount:
         pass
 
     @abstractmethod
-    def validate(self, sender_account: BankAccount, payload: dict) -> ValidationResponse:
+    def validate(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
         pass
 
     @abstractmethod
-    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: dict) -> ProcessResponse:
+    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: IPayload) -> ProcessResponse:
         pass
+
+
+class ProcessPIXPayment(IProcessPayment):  # Concrete Strategy
+    def get_receiver(self, payload: IPayload) -> BankAccount:
+        receiver_key = payload['receiver']
+        if receiver_key == 'any@email.com':
+            return BankAccount('any', 'any@email.com')
+        else:
+            raise ValueError(f'{payload["receiver"]} key not found')
+
+    def validate(self, sender_account: BankAccount, payload: IPayload) -> ValidationResponse:
+        if sender_account.balance >= payload['value']:
+            return ValidationResponse(
+                is_valid=True,
+            )
+        else:
+            return ValidationResponse(is_valid=False, errors={'sender_account': 'Value greater than balance'})
+
+    def process(self, sender_account: BankAccount, receiver_account: BankAccount, payload: IPayload) -> ProcessResponse:
+        sender_account.balance -= payload['value']
+        receiver_account.balance += payload['value']
+        return ProcessResponse(
+            sender=sender_account.name,
+            receiver=receiver_account.name,
+            payment_method='PIX',
+            value=payload['value'],
+            extra={
+                'key': payload['receiver'],
+            },
+        )
