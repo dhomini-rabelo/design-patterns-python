@@ -51,7 +51,7 @@ class NotFoundExceptionHandler(IAPIExceptionHandler):  # Concrete Handler
 
 class MethodNotAllowedExceptionHandler(IAPIExceptionHandler):  # Concrete Handler
     def handle(self, exception: Exception) -> Response | None:
-        if isinstance(exception, NotFound):
+        if isinstance(exception, MethodNotAllowed):
             return Response(status_code=405)
         return None
 
