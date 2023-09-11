@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator
 class PaginatorIterator(Iterator):
     def __init__(self, paginator: 'Paginator'):
         self.__paginator = paginator
-        self.__position = 0
+        self.__position = 1
 
     def __next__(self):
         try:
@@ -18,11 +18,14 @@ class PaginatorIterator(Iterator):
 
         return value
 
-    def __getitem__(self, page: int) -> Tuple[int, int]:
+    def __getitem__(self, input_page: int) -> Tuple[int, int]:
+        page = input_page - 1
         start = (page * self.__paginator._step) + 1
         end = (page + 1) * self.__paginator._step
         length = self.__paginator._length
-        if end < length:
+        if input_page <= 0:
+            raise IndexError('The pagination starts with 1')
+        elif end < length:
             return (start, end)
         elif start < length:
             return (start, length)
@@ -45,6 +48,6 @@ class Paginator(Iterable):
 paginator = Paginator(7, 20)
 
 for index, (start, end) in enumerate(paginator):
-    print(f'index: {index:>2}; start: {start:>2}; end: {end:>2}')
+    print(f'page: {index+1:>2}; start: {start:>2}; end: {end:>2}')
 
-print(f'index 2: {paginator[2]}')
+print(f'page 2: {paginator[2]}')
