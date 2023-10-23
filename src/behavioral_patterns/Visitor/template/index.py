@@ -38,14 +38,7 @@ class StringValidator(IFieldValidator):  # Concrete Element
         return is_string
 
 
-class IntegerValidator(IFieldValidator):  # Concrete Element
-    def validate_integer(self, value: str) -> bool:
-        is_numeric = value.isnumeric()
-        if self._visitor:
-            return is_numeric and self._visitor.validate_field(value)
-        return is_numeric
-
-
 string_validator = StringValidator()
 string_validator.accept(VisitorStringValidator(max_length=10, blank=False))
 print(string_validator.validate_string('2222'))
+print(string_validator.validate_string('2222222222222222'))
